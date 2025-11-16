@@ -3,27 +3,39 @@ import Course from "../models/courseModel.js"
 import Lecture from "../models/lectureModel.js"
 import User from "../models/userModel.js"
 
-// create Courses
-export const createCourse = async (req,res) => {
-    try {
-        const {title,category} = req.body
+export const createCourse = async (req, res) => {
+  try {
+    const { title, category } = req.body;
 
-        if(!title || !category){
-            return res.status(400).json({message:"Title and Category is required!"})
-        }
-
-        const course = await Course.create({
-            title,
-            category,
-            creator: req.userId
-        })
-        
-        return res.status(201).json(course)
-    } catch (error) {
-        return res.status(500).json({message:`Failed to create course error: ${error}`})
+    if (!title || !category) {
+      return res.status(400).json({ message: "Title and Category is required!" });
     }
-    
-}
+
+    let thumbnailUrl = null;
+
+    // if image is uploaded
+    if (req.file) {
+      const uploaded = await uploadOnCloudinary(req.file.path);
+      thumbnailUrl = uploaded.secure_url;
+    }
+
+    const course = await Course.create({
+      title,
+      category,
+      creator: req.userId,
+      thumbnail: thumbnailUrl
+    });
+
+    return res.status(201).json(course);
+
+  } catch (error) {
+    return res.status(500).json({
+      message: `Failed to create course error: ${error}`
+    });
+  }
+};
+
+
 
 
 export const getPublishedCourses = async (req,res) => {
@@ -64,25 +76,26 @@ export const editCourse = async (req,res) => {
         const {courseId} = req.params;
         const {title, subTitle, description, category, level, price, isPublished} = req.body;
         
-        let thumbnail
-        if(req.file){
-            thumbnail = await uploadOnCloudinary(req.file.path)
-        }
-        
-        let course = await Course.findById(courseId)
-        if(!course){
-            return res.status(404).json({message:"Course not found"})
+        let updateData = { title, subTitle, description, category, level, price, isPublished }
+
+        if (req.file) {
+            const uploaded = await uploadOnCloudinary(req.file.path);
+            updateData.thumbnail = uploaded.secure_url;   //  Only save URL
         }
 
-        const updateData = {title, subTitle, description, category, level, price, isPublished, thumbnail}
+        const course = await Course.findByIdAndUpdate(courseId, updateData, {new:true});
 
-        course = await Course.findByIdAndUpdate(courseId, updateData, {new:true})
-        return res.status(201).json(course)
-    
+        if (!course) {
+            return res.status(404).json({message:"Course not found"});
+        }
+
+        return res.status(200).json(course);
+
     } catch (error) {
         return res.status(500).json({message:`Failed to update course: ${error}`})
     }
 }
+
 
 
 export const getCourseById = async (req,res) => {
