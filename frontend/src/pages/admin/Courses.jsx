@@ -63,9 +63,19 @@ function Courses() {
               {creatorCourseData?.map((course, index) => (
                 <tr key={index} className="border-b hover:bg-gray-50 transition duration-200">
                   <td className="py-3 px-4 flex items-center gap-4">
-                    {course?.thumbnail ? <img alt="" className="w-25 h-14 object-cover rounded-md"/> 
-                    : 
-                    <img src={img1} alt='' className="w-14 h-14 object-cover rounded-md object-fit"/>}
+                    {course?.thumbnail ? (
+                      <img 
+                        src={course.thumbnail}
+                        alt="Course Thumbnail"
+                        className="w-20 h-14 object-cover rounded-md"
+                      />
+                    ) : (
+                      <img 
+                        src={img1}
+                        alt="Default Thumbnail"
+                        className="w-14 h-14 object-cover rounded-md"
+                      />
+                    )}
                     <span>{course?.title}</span>
                   </td>
 
