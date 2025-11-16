@@ -14,24 +14,35 @@ export const searchWithAi = async (req,res) => {
 
     // case-insensitive
     const ai = new GoogleGenAI({});
-    const prompt = `You are an intelligent assistant for an LMS platform. A user will type any query about what they want to learn. Your task is to understand the intent and return one **most relevant keyword** from the following list of course categories and levels:
+    const prompt = `
+You are an AI assistant for an LMS platform.
 
-- App Development  
-- AI/ML  
-- AI Tools  
-- Data Science  
-- Data Analytics  
-- Ethical Hacking  
-- UI UX Designing  
-- Web Development  
-- Others  
-- Beginner  
-- Intermediate  
-- Advanced  
+A user will ask what they want to learn. Your job is to understand the intent and return exactly ONE keyword from the list below.
 
-Only reply with one single keyword from the list above that best matches the query. Do not explain anything. No extra text.
+Valid keywords (choose only one):
 
-Query: ${input}`
+App Development
+AI/ML
+AI Tools
+Data Science
+Data Analytics
+Ethical Hacking
+UI UX Designing
+Web Development
+Others
+Beginner
+Intermediate
+Advanced
+
+IMPORTANT RULES:
+- Return ONLY one keyword exactly as listed above.
+- No sentences, no explanation, no punctuation.
+- Do NOT modify the keyword.
+- If unsure, return "Others".
+
+User query: "${input}"
+`;
+
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
