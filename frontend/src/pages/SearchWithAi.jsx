@@ -7,12 +7,14 @@ import { serverUrl } from '../App';
 import { useNavigate } from 'react-router-dom';
 import start from "../assets/start.mp3"
 import { FaArrowLeftLong } from "react-icons/fa6";
+
 function SearchWithAi() {
   const [input, setInput] = useState('');
   const [recommendations, setRecommendations] = useState([]);
-  const [listening,setListening] = useState(false)
+  const [listening, setListening] = useState(false)
   const navigate = useNavigate();
   const startSound = new Audio(start)
+
   function speak(message) {
     let utterance = new SpeechSynthesisUtterance(message);
     window.speechSynthesis.speak(utterance);
@@ -27,7 +29,10 @@ function SearchWithAi() {
 
   const handleSearch = async () => {
 
-    if (!recognition) return;
+    if (!recognition) {
+      return;
+    }
+
     setListening(true)
     startSound.play()
     recognition.start();
@@ -36,21 +41,17 @@ function SearchWithAi() {
       setInput(transcript);
       await handleRecommendation(transcript);
     };
-  
-      
-    
   };
 
   const handleRecommendation = async (query) => {
     try {
       const result = await axios.post(`${serverUrl}/api/ai/search`, { input: query }, { withCredentials: true });
       setRecommendations(result.data);
-      if(result.data.length>0){
- speak("These are the top courses I found for you")
-      }else{
-         speak("No courses found")
+      if(result.data.length > 0) {
+        speak("These are the top courses I found for you")
+      } else{
+        speak("No courses found")
       }
-     
       setListening(false)
     } catch (error) {
       console.log(error);
@@ -62,14 +63,13 @@ function SearchWithAi() {
       
       {/* Search Container */}
       <div className="bg-white shadow-xl rounded-3xl p-6 sm:p-8 w-full max-w-2xl text-center relative">
-        <FaArrowLeftLong  className='text-[black] w-[22px] h-[22px] cursor-pointer absolute' onClick={()=>navigate("/")}/>
+        <FaArrowLeftLong  className='text-[black] w-[22px] h-[22px] cursor-pointer absolute' onClick={() => navigate("/")}/>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-600 mb-6 flex items-center justify-center gap-2">
           <img src={ai} className='w-8 h-8 sm:w-[30px] sm:h-[30px]' alt="AI" />
           Search with <span className='text-[#CB99C7]'>AI</span>
         </h1>
 
-        <div className="flex items-center bg-gray-700 rounded-full overflow-hidden shadow-lg relative w-full ">
-          
+        <div className="flex items-center bg-gray-700 rounded-full overflow-hidden shadow-lg relative w-full ">          
           <input
             type="text"
             className="flex-grow px-4 py-3 bg-transparent text-white placeholder-gray-400 focus:outline-none text-sm sm:text-base"
@@ -77,7 +77,6 @@ function SearchWithAi() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          
           
           {input && (
             <button
@@ -104,7 +103,6 @@ function SearchWithAi() {
             <img src={ai1} className="w-10 h-10 sm:w-[60px] sm:h-[60px] p-2 rounded-full" alt="AI Results" />
             AI Search Results 
           </h2>
-       
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {recommendations.map((course, index) => (
@@ -113,6 +111,12 @@ function SearchWithAi() {
                 className="bg-white text-black p-5 rounded-2xl shadow-md hover:shadow-indigo-500/30 transition-all duration-200 border border-gray-200 cursor-pointer hover:bg-gray-200"
                 onClick={() => navigate(`/viewcourse/${course._id}`)}
               >
+                {/* Thumbnail image */}
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-40 object-cover rounded-xl mb-3"
+                />
                 <h3 className="text-lg font-bold sm:text-xl">{course.title}</h3>
                 <p className="text-sm text-gray-600 mt-1">{course.category}</p>
               </div>
@@ -120,8 +124,7 @@ function SearchWithAi() {
           </div>
         </div>
       ) : (
-        listening? <h1 className='text-center text-xl sm:text-2xl mt-10 text-gray-400'>Listening...</h1>:<h1 className='text-center text-xl sm:text-2xl mt-10 text-gray-400'>No Courses Found</h1>
-       
+        listening ? <h1 className='text-center text-xl sm:text-2xl mt-10 text-gray-400'>Listening...</h1> : <h1 className='text-center text-xl sm:text-2xl mt-10 text-gray-400'>No Courses Found</h1>
       )}
     </div>
   );

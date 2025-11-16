@@ -38,12 +38,11 @@ const Footer = () => {
             <li className="hover:text-white">UI/UX Design</li>
           </ul>
         </div>
-
       </div>
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-700 mt-10 pt-5 text-sm text-center text-gray-500">
-        © {new Date().getFullYear()} LearnAI. All rights reserved.
+        © {new Date().getFullYear()} Virtual Courses. All rights reserved.
       </div>
     </footer>
   );

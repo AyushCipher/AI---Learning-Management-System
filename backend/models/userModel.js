@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -12,7 +13,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String
-      
     },
     description: {
       type: String
@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema(
       type:Boolean,
       default:false
     }
-    
   },
   { timestamps: true }
 );

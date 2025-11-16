@@ -34,7 +34,7 @@ const courseSchema = new mongoose.Schema({
         ref:"Lecture"
     }],
     creator:{
-         type:mongoose.Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
     isPublished:{
@@ -44,7 +44,7 @@ const courseSchema = new mongoose.Schema({
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
-        }],
+    }],
 },{timestamps:true})
 
 const Course = mongoose.model("Course",courseSchema)

@@ -6,12 +6,10 @@ const courseSlice=createSlice({
         creatorCourseData:[],
         courseData:[],
         selectedCourseData:null
-        
-
     },
     reducers:{
         setCreatorCourseData:(state,action)=>{
-        state.creatorCourseData=action.payload
+            state.creatorCourseData=action.payload
         },
         setCourseData:(state,action)=>{
             state.courseData = action.payload
@@ -22,7 +20,7 @@ const courseSlice=createSlice({
     }
 })
 
-export const {setCreatorCourseData}=courseSlice.actions
+export const {setCreatorCourseData} = courseSlice.actions
 export const {setCourseData} = courseSlice.actions
 export const {setSelectedCourseData} = courseSlice.actions
 export default courseSlice.reducer

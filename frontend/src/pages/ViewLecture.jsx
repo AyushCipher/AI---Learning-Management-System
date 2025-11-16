@@ -13,6 +13,7 @@ function ViewLecture() {
   const [selectedLecture, setSelectedLecture] = useState(
     selectedCourse?.lectures?.[0] || null
   );
+
   const navigate = useNavigate()
   const courseCreator = userData?._id === selectedCourse?.creator ? userData : null;
 
@@ -25,7 +26,8 @@ function ViewLecture() {
         {/* Course Details */}
         <div className="mb-6" >
            
-          <h1 className="text-2xl font-bold flex items-center justify-start gap-[20px]  text-gray-800"><FaArrowLeftLong  className=' text-black w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/")}/>{selectedCourse?.title}</h1>
+          <h1 className="text-2xl font-bold flex items-center justify-start gap-[20px] text-gray-800">
+          <FaArrowLeftLong className='text-black w-[22px] h-[22px] cursor-pointer' onClick={() => navigate("/")}/>{selectedCourse?.title}</h1>
           
           <div className="mt-2 flex gap-4 text-sm text-gray-500 font-medium">
             <span>Category: {selectedCourse?.category}</span>
@@ -39,8 +41,9 @@ function ViewLecture() {
             <video
               src={selectedLecture.videoUrl}
               controls
+              controlsList="nodownload"
               className="w-full h-full object-cover"
-              crossOrigin="anonymous"
+              crossOrigin="anonymous"             // Fetch the video WITHOUT sending user credentials(No cookies, No authentication headers, No sensitive tokens), so the request is anonymous.
             />
           ) : (
             <div className="flex items-center justify-center h-full text-white">
@@ -52,9 +55,9 @@ function ViewLecture() {
         {/* Selected Lecture Info */}
         <div className="mt-2">
           <h2 className="text-lg font-semibold text-gray-800">{selectedLecture?.lectureTitle}</h2>
-          
         </div>
       </div>
+
 
       {/* Right - All Lectures + Creator Info */}
       <div className="w-full md:w-1/3 bg-white rounded-2xl shadow-md p-6 border border-gray-200 h-fit">
@@ -73,7 +76,6 @@ function ViewLecture() {
               >
                 <div>
                   <h4 className="text-sm font-semibold text-gray-800">{lecture.lectureTitle}</h4>
-                  
                 </div>
                 <FaPlayCircle className="text-black text-xl" />
               </button>
@@ -84,24 +86,52 @@ function ViewLecture() {
         </div>
 
         {/* Creator Info */}
+        {/* {courseCreator && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">Instructor</h3>
+            <div className="flex items-center gap-4">
+              <img
+                src={courseCreator.photoUrl || '/default-avatar.png'}
+                alt="Instructor"
+                className="w-14 h-14 rounded-full object-cover border"
+              />
+              <div>
+                <h4 className="text-base font-medium text-gray-800">{courseCreator.name}</h4>
+                <p className="text-sm text-gray-600">
+                  {courseCreator.description || 'No bio available.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )} */}
+
+        {/* Instructor Section */}
         {courseCreator && (
-  <div className="mt-4 border-t pt-4">
-    <h3 className="text-md font-semibold text-gray-700 mb-3">Instructor</h3>
-    <div className="flex items-center gap-4">
-      <img
-        src={courseCreator.photoUrl || '/default-avatar.png'}
-        alt="Instructor"
-        className="w-14 h-14 rounded-full object-cover border"
-      />
-      <div>
-        <h4 className="text-base font-medium text-gray-800">{courseCreator.name}</h4>
-        <p className="text-sm text-gray-600">
-          {courseCreator.description || 'No bio available.'}
-        </p>
-      </div>
-    </div>
-  </div>
+          <div className="mt-8 rounded-xl border p-5 shadow-sm bg-white">
+            <div className="flex gap-4">
+              <img
+                src={courseCreator.photoUrl || '/default-avatar.png'}
+                alt="Instructor"
+                className="w-20 h-20 rounded-full object-cover ring-2 ring-blue-200 shadow-sm"
+              />
+
+              <div className="flex-1 overflow-hidden">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {courseCreator.name}
+                </h3>
+
+                <p className="text-sm text-gray-600 mt-1">
+                  {courseCreator.description || "No bio available."}
+                </p>
+
+                <p className="text-sm font-medium text-blue-600 mt-1">
+                  {courseCreator.email}
+                </p>
+              </div>
+            </div>
+          </div>
         )}
+
       </div>
     </div>
   );

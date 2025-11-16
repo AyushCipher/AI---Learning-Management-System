@@ -1,12 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit"
 
-const reviewSlice=createSlice({
+const reviewSlice = createSlice({
     name:"review",
     initialState:{
         allReview:[]
-       
-        
-
     },
     reducers:{
         setAllReview:(state,action)=>{
@@ -16,5 +13,4 @@ const reviewSlice=createSlice({
 })
 
 export const {setAllReview}=reviewSlice.actions
-
 export default reviewSlice.reducer

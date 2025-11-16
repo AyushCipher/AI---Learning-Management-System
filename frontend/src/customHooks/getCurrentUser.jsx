@@ -3,9 +3,10 @@ import { serverUrl } from "../App"
 import axios from "axios"
 import { useDispatch, useSelector } from "react-redux"
 import { setUserData } from "../redux/userSlice"
+
 const getCurrentUser = ()=>{
     let dispatch = useDispatch()
-   
+
     useEffect(()=>{
         const fetchUser = async () => {
             try {

@@ -10,7 +10,6 @@ function VideoPlayer() {
         loop
         controls
         className="w-full rounded-xl shadow-lg  border-2 border-white"
-        
       >
         Your browser does not support the video tag.
       </video>

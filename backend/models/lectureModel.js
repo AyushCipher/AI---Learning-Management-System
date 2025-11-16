@@ -14,7 +14,6 @@ const lectureSchema = new mongoose.Schema({
     
 },{timestamps:true})
 
-
 const Lecture = mongoose.model("Lecture" , lectureSchema)
 
 export default Lecture
