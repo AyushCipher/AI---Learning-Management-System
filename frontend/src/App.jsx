@@ -27,7 +27,7 @@ import getAllReviews from './customHooks/getAllReviews'
 import NotFound from './pages/NotFound';
 
 
-export const serverUrl = "http://localhost:8000"
+export const serverUrl = "https://lms-backend-dl4c.onrender.com"
 
 function App() {
   
