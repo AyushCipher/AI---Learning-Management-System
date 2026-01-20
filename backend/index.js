@@ -20,7 +20,7 @@ app.use(cookieParser())
 
 app.use(cors({
     origin: [
-    "http://localhost:5173",
+    "https://ai-lms-front-end.onrender.com",
     // "https://lms-frontend-7sku.onrender.com"
   ],
     credentials:true
