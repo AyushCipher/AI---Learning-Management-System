@@ -8,7 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClipLoader } from 'react-spinners';
-import { setCourseData } from '../../redux/courseSlice';
+import { setCourseData, setCreatorCourseData } from '../../redux/courseSlice';
 
 function AddCourses() {
   const navigate= useNavigate()
@@ -26,7 +26,7 @@ function AddCourses() {
   const [backendImage,setBackendImage] = useState(null)
   let [loading,setLoading] = useState(false)
   const dispatch = useDispatch()
-  const {courseData} = useSelector(state=>state.course)
+  const {courseData, creatorCourseData} = useSelector(state=>state.course)
 
   const getCourseById = async () => {
     try {
@@ -48,7 +48,7 @@ function AddCourses() {
       setLevel(selectedCourse.level || "")
       setPrice(selectedCourse.price || "")
       setFrontendImage(selectedCourse.thumbnail || img)
-      setIsPublished(selectedCourse?.isPublished)
+      setIsPublished(selectedCourse?.isPublished || false)
     }
   }, [selectedCourse])
 
@@ -64,7 +64,7 @@ function AddCourses() {
   }
   
 
-  const editCourseHandler = async () => {
+  const editCourseHandler = async (publishState) => {
     setLoading(true);
     const formData = new FormData();
     formData.append("title", title);
@@ -74,7 +74,7 @@ function AddCourses() {
     formData.append("level", level);
     formData.append("price", price);
     formData.append("thumbnail", backendImage);
-    formData.append("isPublished", isPublished);
+    formData.append("isPublished", typeof publishState === 'boolean' ? publishState : isPublished);
 
     try {
       const result = await axios.post(
@@ -85,6 +85,11 @@ function AddCourses() {
 
       const updatedCourse = result.data;
 
+      // Update creatorCourseData (for Courses page)
+      const updatedCreatorCourses = creatorCourseData.map(c => c._id === courseId ? updatedCourse : c);
+      dispatch(setCreatorCourseData(updatedCreatorCourses));
+
+      // Update courseData (published courses for students)
       if (updatedCourse.isPublished) {
         const updatedCourses = courseData.map(c => c._id === courseId ? updatedCourse : c);
         if (!courseData.some(c => c._id === courseId)) {
@@ -142,10 +147,24 @@ function AddCourses() {
       <div className="bg-gray-50 p-6 rounded-md">
         <h3 className="text-lg font-medium mb-4">Basic Course Information</h3>
         <div className="space-x-2 space-y-2">
-          {!isPublished ? <button className="bg-green-100 text-green-600 px-4 py-2 rounded-md border-1" onClick={() => setIsPublished(prev=>!prev)}>Click to Publish</button> 
-          :<button className="bg-red-100 text-red-600 px-4 py-2 rounded-md border-1" onClick={() => setIsPublished(prev=>!prev)}>Click to UnPublish</button>
+          {!isPublished ? 
+            <button type="button" className="bg-green-100 text-green-600 px-4 py-2 rounded-md border-1" 
+              onClick={() => {
+                setIsPublished(true);
+                setTimeout(() => editCourseHandler(true), 0);
+              }}>
+              Click to Publish
+            </button> 
+          :
+            <button type="button" className="bg-red-100 text-red-600 px-4 py-2 rounded-md border-1" 
+              onClick={() => {
+                setIsPublished(false);
+                setTimeout(() => editCourseHandler(false), 0);
+              }}>
+              Click to UnPublish
+            </button>
           }
-          <button className="bg-red-600 text-white px-4 py-2 rounded-md" disabled={loading} onClick={removeCourse}>{loading ? <ClipLoader size={30} color='white'/> :"Remove Course"}</button>
+          <button type="button" className="bg-red-600 text-white px-4 py-2 rounded-md" disabled={loading} onClick={removeCourse}>{loading ? <ClipLoader size={30} color='white'/> :"Remove Course"}</button>
         </div>
 
         <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>

@@ -49,12 +49,19 @@ function ForgotPassword() {
 
   
   const handleStep3 = async () => {
+    // Check password match before starting loader
+    if(newpassword !== conPassword){
+      toast.error("Passwords do not match")
+      return
+    }
+
+    if(newpassword.length < 8){
+      toast.error("Password must be at least 8 characters")
+      return
+    }
+
     setLoading(true)
     try {
-      if(newpassword !== conPassword){
-        return toast.error("Passwords do not match")
-      }
-
       const result = await axios.post(`${serverUrl}/api/auth/resetpassword` , {email,password:newpassword} , {withCredentials:true})
       console.log(result)
       toast.success(result.data.message)
@@ -62,7 +69,7 @@ function ForgotPassword() {
       navigate("/login")
     } catch (error) {
       console.log(error)
-      toast.error(error.response.data.message)
+      toast.error(error.response?.data?.message || "Reset Password Error")
       setLoading(false)
     }
   }

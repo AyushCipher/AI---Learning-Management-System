@@ -10,27 +10,30 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 
 function EditProfile() {
   let {userData} = useSelector(state=>state.user)
-  let [name,setName] = useState(userData.name || "")
-  let [description,setDescription] = useState(userData.description || "")
+  let [name,setName] = useState(userData?.name || "")
+  let [description,setDescription] = useState(userData?.description || "")
   let [photoUrl,setPhotoUrl] = useState(null)
   let dispatch = useDispatch()
   let [loading,setLoading] = useState(false)
   let navigate = useNavigate()
 
-  const formData = new FormData()
-  formData.append("name", name)
-  formData.append("description", description)
-  formData.append("photoUrl", photoUrl)
-
   const updateProfile = async () => {
     setLoading(true)
     try {
+      // Create FormData inside the function to capture current values
+      const formData = new FormData()
+      formData.append("name", name)
+      formData.append("description", description)
+      if (photoUrl) {
+        formData.append("photoUrl", photoUrl)
+      }
+
       const result = await axios.post(serverUrl + "/api/user/updateprofile", formData, {withCredentials:true})
       console.log(result.data)
       dispatch(setUserData(result.data))
-      navigate("/")
+      toast.success("Profile Updated Successfully")
+      navigate("/profile")
       setLoading(false)
-      toast.success("Profile Update Successfully")   
 
     } catch (error) {
       console.log(error)

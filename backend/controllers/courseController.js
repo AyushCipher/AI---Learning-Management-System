@@ -15,8 +15,7 @@ export const createCourse = async (req, res) => {
 
     // if image is uploaded
     if (req.file) {
-      const uploaded = await uploadOnCloudinary(req.file.path);
-      thumbnailUrl = uploaded.secure_url;
+      thumbnailUrl = await uploadOnCloudinary(req.file.path);
     }
 
     const course = await Course.create({
@@ -40,14 +39,16 @@ export const createCourse = async (req, res) => {
 
 export const getPublishedCourses = async (req,res) => {
     try {
-        const courses = await Course.find({isPublished: true}).populate("lectures reviews")
-        
+        const courses = await Course.find({isPublished: true})
+          .populate("lectures")
+          .populate({
+            path: "reviews",
+            populate: { path: "user", select: "name photoUrl enrolledCourses" }
+          });
         if(!courses){
             return res.status(404).json({message:"Course not found"})
         }
-
         return res.status(200).json(courses)
-        
     } catch (error) {
         return res.status(500).json({message:`Failed to get all courses: ${error}`})
     }
@@ -76,14 +77,24 @@ export const editCourse = async (req,res) => {
         const {courseId} = req.params;
         const {title, subTitle, description, category, level, price, isPublished} = req.body;
         
-        let updateData = { title, subTitle, description, category, level, price, isPublished }
+        console.log("Received isPublished:", isPublished, "Type:", typeof isPublished);
+        
+        // Convert isPublished from string to boolean (FormData sends strings)
+        const isPublishedBool = isPublished === 'true' || isPublished === true;
+        
+        console.log("Converted isPublishedBool:", isPublishedBool);
+        
+        let updateData = { title, subTitle, description, category, level, price, isPublished: isPublishedBool }
 
         if (req.file) {
-            const uploaded = await uploadOnCloudinary(req.file.path);
-            updateData.thumbnail = uploaded.secure_url;   //  Only save URL
+            updateData.thumbnail = await uploadOnCloudinary(req.file.path);
         }
 
+        console.log("Update data:", updateData);
+
         const course = await Course.findByIdAndUpdate(courseId, updateData, {new:true});
+
+        console.log("Updated course isPublished:", course?.isPublished);
 
         if (!course) {
             return res.status(404).json({message:"Course not found"});
@@ -102,7 +113,11 @@ export const getCourseById = async (req,res) => {
     try {
         const {courseId} = req.params
         let course = await Course.findById(courseId)
-        
+          .populate("lectures")
+          .populate({
+            path: "reviews",
+            populate: { path: "user", select: "name photoUrl enrolledCourses" }
+          });
         if(!course){
             return res.status(404).json({message:"Course not found"})
         }
@@ -199,7 +214,8 @@ export const editLecture = async (req,res) => {
             lecture.lectureTitle = lectureTitle
         }
 
-        lecture.isPreviewFree = isPreviewFree
+        // Convert string "true"/"false" to boolean (FormData sends strings)
+        lecture.isPreviewFree = isPreviewFree === 'true' || isPreviewFree === true
         
         await lecture.save()
         return res.status(200).json(lecture)

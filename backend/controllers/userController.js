@@ -21,19 +21,25 @@ export const UpdateProfile = async (req,res) => {
         const userId = req.userId
         const {name, description} = req.body
 
-        let photoUrl
+        let updateData = { name, description }
 
         if(req.file){
-           photoUrl = await uploadOnCloudinary(req.file.path)
+           const photoUrl = await uploadOnCloudinary(req.file.path)
+           if (photoUrl) {
+               updateData.photoUrl = photoUrl
+           }
         }
 
-        const user = await User.findByIdAndUpdate(userId, {name,description,photoUrl})
+        const user = await User.findByIdAndUpdate(
+            userId, 
+            updateData,
+            { new: true }  // Return the updated document
+        ).select("-password").populate("enrolledCourses")
 
         if(!user){
             return res.status(404).json({message:"User not found"})
         }
         
-        await user.save()
         return res.status(200).json(user)
     } catch (error) {
         console.log(error);

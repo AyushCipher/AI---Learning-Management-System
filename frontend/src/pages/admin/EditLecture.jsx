@@ -17,17 +17,20 @@ function EditLecture() {
   const navigate = useNavigate()
   const selectedLecture = lectureData.find(lecture => lecture._id === lectureId)
   const [videoUrl,setVideoUrl] = useState(null)
-  const [lectureTitle,setLectureTitle] = useState(selectedLecture.lectureTitle)
-  const [isPreviewFree,setIsPreviewFree] = useState(false)
-
-  const formData = new FormData()
-  formData.append("lectureTitle",lectureTitle)
-  formData.append("videoUrl",videoUrl)
-  formData.append("isPreviewFree",isPreviewFree)
-    
+  const [lectureTitle,setLectureTitle] = useState(selectedLecture?.lectureTitle || "")
+  const [isPreviewFree,setIsPreviewFree] = useState(selectedLecture?.isPreviewFree || false)
+  const [showNewUpload, setShowNewUpload] = useState(!selectedLecture?.videoUrl)
 
   const editLecture = async () => {
     setLoading(true)
+    const formData = new FormData()
+    formData.append("lectureTitle",lectureTitle)
+    formData.append("isPreviewFree",isPreviewFree)
+    // Only append video if a new one is selected
+    if(videoUrl) {
+      formData.append("videoUrl",videoUrl)
+    }
+    
     try {
       const result = await axios.post(serverUrl + `/api/course/editlecture/${lectureId}` , formData , {withCredentials:true})
       console.log(result.data)
@@ -48,13 +51,16 @@ function EditLecture() {
     try {
       const result = await axios.delete(serverUrl + `/api/course/removelecture/${lectureId}` , {withCredentials:true})
       console.log(result.data)
+      // Remove the lecture from Redux state
+      const updatedLectures = lectureData.filter(lecture => lecture._id !== lectureId)
+      dispatch(setLectureData(updatedLectures))
       toast.success("Lecture Removed Successfully")
       navigate(`/createlecture/${courseId}`)
       setLoading1(false)
 
     } catch (error) {
       console.log(error)
-      toast.error("Lecture remove error")
+      toast.error(error.response?.data?.message || "Lecture remove error")
       setLoading1(false)
     }
   }
@@ -84,7 +90,7 @@ function EditLecture() {
             <input
               type="text"
               className="w-full p-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[black] focus:outline-none"
-              placeholder={selectedLecture.lectureTitle}
+              placeholder={selectedLecture?.lectureTitle || "Enter lecture title"}
               onChange={(e )=> setLectureTitle(e.target.value)}
               value={lectureTitle}
             />
@@ -92,13 +98,48 @@ function EditLecture() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Video *</label>
-            <input
-              type="file"
-              required
-              accept='video/*'
-              className="w-full border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-gray-700 file:text-[white] hover:file:bg-gray-500"
-              onChange={(e) => setVideoUrl(e.target.files[0])}
-            />
+            
+            {/* Show existing video if available */}
+            {selectedLecture?.videoUrl && !showNewUpload ? (
+              <div className="space-y-3">
+                <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
+                  <p className="text-sm text-gray-600 mb-2">Current Video:</p>
+                  <video 
+                    src={selectedLecture.videoUrl} 
+                    controls 
+                    className="w-full max-h-48 rounded-md"
+                  />
+                </div>
+                <button 
+                  type="button"
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  onClick={() => setShowNewUpload(true)}
+                >
+                  Upload a different video
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept='video/*'
+                  className="w-full border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-gray-700 file:text-[white] hover:file:bg-gray-500"
+                  onChange={(e) => setVideoUrl(e.target.files[0])}
+                />
+                {selectedLecture?.videoUrl && (
+                  <button 
+                    type="button"
+                    className="text-sm text-gray-600 hover:text-gray-800 underline"
+                    onClick={() => {
+                      setShowNewUpload(false)
+                      setVideoUrl(null)
+                    }}
+                  >
+                    Cancel - Keep existing video
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Toggle */}
@@ -106,6 +147,7 @@ function EditLecture() {
             <input
               type="checkbox"
               className="accent-[black] h-4 w-4"
+              checked={isPreviewFree}
               onChange={() => setIsPreviewFree(prev=>!prev)}
             />
             <label htmlFor="isFree" className="text-sm text-gray-700">Make this video FREE</label>

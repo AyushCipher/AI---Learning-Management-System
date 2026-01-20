@@ -10,6 +10,7 @@ import { setSelectedCourseData } from '../redux/courseSlice';
 import { FaLock, FaPlayCircle } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import { FaStar } from "react-icons/fa6";
+import { setUserData } from '../redux/userSlice';
 
 
 function ViewCourse() {
@@ -26,19 +27,39 @@ function ViewCourse() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
 
   const handleReview = async () => {
+    // Prevent duplicate review submission
+    const alreadyReviewed = selectedCourseData?.reviews?.some(
+      (r) => r.user && (r.user._id === userData._id || r.user === userData._id)
+    );
+    if (alreadyReviewed) return;
+    setIsSubmittingReview(true);
     try {
       const result = await axios.post(serverUrl + "/api/review/givereview", {rating , comment , courseId} , {withCredentials:true})
       toast.success("Review Added")
-      console.log(result.data)
       setRating(0)
       setComment("")
-
+      // Fetch updated course data to show new review
+      const updatedCourse = await axios.get(serverUrl + `/api/course/getcourse/${courseId}`, {withCredentials:true});
+      dispatch(setSelectedCourseData(updatedCourse.data));
+      // Fetch all published courses and update Redux so AllCourses page updates instantly
+      const allCourses = await axios.get(serverUrl + "/api/course/getpublishedcourses", {withCredentials:true});
+      dispatch(setCourseData(allCourses.data));
+      // Update educator's other courses with latest data
+      if (creatorData?._id) {
+        const updatedCreatorCourses = allCourses.data.filter(
+          (course) => course.creator === creatorData._id && course._id !== courseId
+        );
+        setSelectedCreatorCourse(updatedCreatorCourses);
+      }
     } catch (error) {
+      // Only log error, do not show error toast for duplicate review
       console.log(error)
-      toast.error(error.response.data.message)
+    } finally {
+      setIsSubmittingReview(false);
     }
   }
   
@@ -83,9 +104,19 @@ function ViewCourse() {
 
 
   useEffect(() => {
-    fetchCourseData()
-    checkEnrollment()
-  }, [courseId, courseData, lectureData])
+    // Always fetch latest published courses when opening a course
+    const fetchAllCourses = async () => {
+      try {
+        const allCourses = await axios.get(serverUrl + "/api/course/getpublishedcourses", {withCredentials:true});
+        dispatch(setCourseData(allCourses.data));
+      } catch (err) {
+        console.log("Error fetching all courses", err);
+      }
+    };
+    fetchAllCourses();
+    fetchCourseData();
+    checkEnrollment();
+  }, [courseId, lectureData]);
 
 
   // Fetch creator info once course data is available
@@ -137,17 +168,23 @@ function ViewCourse() {
         description: "Course Enrollment Payment",
         order_id: orderData.data.id,
         handler: async function (response) {
-          console.log("Razorpay Response:", response);
           try {
             const verifyRes = await axios.post(serverUrl + "/api/payment/verify-payment",{
               ...response,       
               courseId,
               userId
             }, { withCredentials: true });
-          
-            setIsEnrolled(true)
-            toast.success(verifyRes.data.message);
-          
+            // Success: update Redux and navigate
+            if (verifyRes.status === 200 && verifyRes.data.message?.toLowerCase().includes("success")) {
+              toast.success(verifyRes.data.message);
+              // Fetch latest user data (with enrolled courses)
+              const userRes = await axios.get(serverUrl + "/api/user/currentuser", { withCredentials: true });
+              dispatch(setUserData(userRes.data));
+              setIsEnrolled(true);
+              navigate("/enrolledcourses");
+            } else {
+              toast.error("Payment verification failed.");
+            }
           } catch (verifyError) {
             toast.error("Payment verification failed.");
             console.error("Verification Error:", verifyError);
@@ -301,27 +338,45 @@ function ViewCourse() {
 
         {/* Reviews Section */}
         <div className="mt-8 border-t pt-6">
-          <h2 className="text-xl font-semibold mb-2">Write a Review</h2>
-          <div className="mb-4">
-            <div className="flex gap-1 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-              
-                <FaStar key={star}
-                onClick={() => setRating(star)} className={star <= rating ? "fill-yellow-500" : "fill-gray-300"} />
-              
-              ))}
-            </div>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Write your comment here..."
-              className="w-full border border-gray-300 rounded-lg p-2"
-              rows="3"
-            />
-            <button className="bg-black text-white mt-3 px-4 py-2 rounded hover:bg-gray-800" onClick={handleReview}>
-              Submit Review
-            </button>
-          </div>
+          {/* Only show review form if user is enrolled and has not already reviewed */}
+          {isEnrolled && (() => {
+            const alreadyReviewed = selectedCourseData?.reviews?.some(
+              (r) => r.user && (r.user._id === userData._id || r.user === userData._id)
+            );
+            if (alreadyReviewed) {
+              return (
+                <div className="mb-4 text-green-600 font-semibold">You have already reviewed this course.</div>
+              );
+            }
+            return (
+              <>
+                <h2 className="text-xl font-semibold mb-2">Write a Review</h2>
+                <div className="mb-4">
+                  <div className="flex gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar key={star}
+                        onClick={() => setRating(star)}
+                        className={star <= rating ? "fill-yellow-500" : "fill-gray-300"} />
+                    ))}
+                  </div>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Write your comment here..."
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                    rows="3"
+                  />
+                  <button
+                    className="bg-black text-white mt-3 px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-60"
+                    onClick={handleReview}
+                    disabled={isSubmittingReview}
+                  >
+                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                  </button>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Instructor Info */}
           {/* <div className="flex items-center gap-4 pt-4 border-t ">
@@ -390,18 +445,21 @@ function ViewCourse() {
               <p className="text-xl font-semibold mb-4 text-gray-800">
                 Other Published Courses by the Educator
               </p>
-
-              <div className="w-full transition-all duration-300 py-6 flex flex-wrap gap-6 justify-center lg:justify-start">
-                {selectedCreatorCourse?.map((item, index) => (
-                  <Card
-                    key={index}
-                    thumbnail={item.thumbnail}
-                    title={item.title}
-                    id={item._id}
-                    price={item.price}
-                    category={item.category}
-                  />
-                ))}
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 py-6 place-items-center">
+                {selectedCreatorCourse?.map((item, index) => {
+                  console.log(`Course: ${item.title}, Reviews:`, item.reviews);
+                  return (
+                    <Card
+                      key={index}
+                      thumbnail={item.thumbnail}
+                      title={item.title}
+                      id={item._id}
+                      price={item.price}
+                      category={item.category}
+                      reviews={item.reviews}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>

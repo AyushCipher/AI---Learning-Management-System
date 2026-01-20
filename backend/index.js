@@ -9,6 +9,8 @@ import courseRouter from "./routes/courseRoute.js"
 import paymentRouter from "./routes/paymentRoute.js"
 import aiRouter from "./routes/aiRoute.js"
 import reviewRouter from "./routes/reviewRoute.js"
+import commentRouter from "./routes/commentRoute.js"
+import progressRouter from "./routes/progressRoute.js"
 dotenv.config()
 
 let port = process.env.PORT
@@ -30,6 +32,8 @@ app.use("/api/course", courseRouter)
 app.use("/api/payment", paymentRouter)
 app.use("/api/ai", aiRouter)
 app.use("/api/review", reviewRouter)
+app.use("/api/comment", commentRouter)
+app.use("/api/progress", progressRouter)
 
 app.get("/" , (req,res)=>{
     res.send("Hello From Server")
