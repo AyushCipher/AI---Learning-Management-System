@@ -158,8 +158,17 @@ IMPORTANT: Do NOT use horizontal lines (---), do NOT use pipe characters (|), ke
 
     return res.status(200).json({ summary });
   } catch (error) {
+    // Improved error logging for debugging
     console.log("Generate Summary Error:", error);
-    return res.status(500).json({ message: "Failed to generate summary", error });
+    let errorMessage = error?.message || "Unknown error";
+    let errorStack = error?.stack || null;
+    let errorResponse = error?.response?.data || null;
+    return res.status(500).json({ 
+      message: "Failed to generate summary", 
+      error: errorMessage,
+      stack: errorStack,
+      response: errorResponse
+    });
   }
 };
 
