@@ -27,7 +27,7 @@ import getAllReviews from './customHooks/getAllReviews'
 import NotFound from './pages/NotFound';
 
 
-export const serverUrl = "http://localhost:8000";
+export const serverUrl = "https://ai-learning-management-system-f9bq.onrender.com";
 
 function App() {
   
