@@ -229,3 +229,4 @@ IMPORTANT: Return ONLY the JSON array, no markdown, no code blocks, no additiona
     return res.status(500).json({ message: "Failed to generate quiz", error });
   }
 };
+;
